@@ -1,0 +1,121 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
+
+class Product {
+  String id;
+  String name;
+  String description;
+  String imageUrl;
+  double price;
+  String quantity; 
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.imageUrl,
+    required this.price,
+    required this.quantity,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'imageUrl': imageUrl,
+      'price': price,
+      'quantity': quantity, 
+    };
+  }
+}
+
+class AdminPanel extends StatefulWidget {
+  final VoidCallback onAddProduct;
+
+  AdminPanel({required this.onAddProduct});
+
+  @override
+  _AdminPanelState createState() => _AdminPanelState();
+}
+
+class _AdminPanelState extends State<AdminPanel> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _imageUrlController = TextEditingController();
+  final TextEditingController _quantityController =
+      TextEditingController(); 
+  
+  Future<void> addProduct(Product product) async {
+    await FirebaseFirestore.instance
+        .collection('data')
+        .doc(product.id)
+        .set(product.toMap());
+  }
+
+  
+  Future<void> _addProduct() async {
+    if (_imageUrlController.text.isNotEmpty &&
+        _nameController.text.isNotEmpty &&
+        _priceController.text.isNotEmpty) {
+      Product newProduct = Product(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: _nameController.text,
+          description: _descriptionController.text,
+          imageUrl: _imageUrlController.text,
+          price: double.parse(_priceController.text),
+          quantity: _quantityController.text);
+
+      print(newProduct.toMap()); 
+
+      await addProduct(newProduct);
+
+      _nameController.clear();
+      _descriptionController.clear();
+      _priceController.clear();
+      _imageUrlController.clear();
+      _quantityController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Admin Panel')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Product Name'),
+            ),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            TextField(
+              controller: _priceController,
+              decoration: const InputDecoration(labelText: 'Price'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _imageUrlController,
+              decoration: const InputDecoration(labelText: 'Image URL'),
+            ),
+            TextField(
+              controller: _quantityController, 
+              decoration: const InputDecoration(labelText: 'Quantity'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _addProduct,
+              child: const Text('Add Product'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
